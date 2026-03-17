@@ -18,7 +18,7 @@ const { testConnection } = require('./config/database');
 const { syncDatabase, initModels } = require('./models');
 const translations = require('./i18n/translations');
 const whatsappService = require('./services/whatsappService');
-const claudeAI = require('./services/claudeAIService');
+const aiService = require('./services/aiService');
 const conversationManager = require('./services/conversationManager');
 const paymentService = require('./services/paymentService');
 const reminderWorker = require('./workers/reminderWorker');
@@ -187,7 +187,7 @@ async function handleTextMessage(from, text, user) {
   await conversationManager.saveToContext(user.id, 'user', text);
 
   // Get AI response
-  const result = await claudeAI.answerLegalQuery(text, lang, context);
+  const result = await aiService.answerLegalQuery(text, lang, context);
 
   // Send response
   await whatsappService.sendTextMessage(from, result.text);
@@ -228,7 +228,7 @@ async function handleVoiceMessage(from, message, user) {
 
     // Download and transcribe
     const media = await whatsappService.downloadMedia(mediaId);
-    const transcription = await claudeAI.transcribeAudio(media.data, media.mimeType);
+    const transcription = await aiService.transcribeAudio(media.data, media.mimeType);
 
     if (transcription) {
       // Process transcribed text as a normal query
@@ -521,7 +521,7 @@ async function startServer() {
       logger.info(`🏥 Health:  ${process.env.BASE_URL || 'http://localhost:' + PORT}/health`);
       logger.info('');
       logger.info('🔧 Checklist:');
-      logger.info(`   Claude AI: ✅ configured`);
+      logger.info(`   AI:        ${aiService.isConfigured() ? '✅ ' + aiService.provider : '❌ not configured'}`);
       logger.info(`   Razorpay:  ${paymentService.isConfigured() ? '✅ configured' : '⚠️  not configured (payments disabled)'}`);
       logger.info(`   Database:  ✅ connected`);
       logger.info('');

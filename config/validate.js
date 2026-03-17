@@ -11,14 +11,23 @@ function validateEnv() {
   const required = [
     ['WHATSAPP_TOKEN', 'WhatsApp Cloud API access token'],
     ['PHONE_NUMBER_ID', 'WhatsApp Phone Number ID'],
-    ['VERIFY_TOKEN', 'Webhook verification token'],
-    ['ANTHROPIC_API_KEY', 'Claude AI API key']
+    ['VERIFY_TOKEN', 'Webhook verification token']
   ];
 
   for (const [key, desc] of required) {
     if (!process.env[key] || process.env[key].includes('your_')) {
       errors.push(`❌ Missing ${key} — ${desc}`);
     }
+  }
+
+  // AI Provider — need at least one
+  const hasGemini = process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('your_');
+  const hasClaude = process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.includes('your_');
+  if (!hasGemini && !hasClaude) {
+    errors.push('❌ Missing AI provider — set GEMINI_API_KEY (free) or ANTHROPIC_API_KEY');
+  } else {
+    const provider = process.env.AI_PROVIDER === 'claude' && hasClaude ? 'Claude' : 'Gemini';
+    console.log(`🧠 AI Provider: ${provider}`);
   }
 
   // Database — need at least one
